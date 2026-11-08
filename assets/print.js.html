@@ -1,0 +1,167 @@
+<script>
+(function(){
+  /* ------------------------------------------------------------------
+     收集某一天**全部**题目（阶段19 v14 修订）
+
+     ⚠️ 旧版靠「题里有没有输入框」来筛「需要写步骤的题」。
+     网页端输入框移除后（用户要求去掉「演算区」），这个判断会筛出 0 题，
+     打印按钮直接失效 —— 必须换成按题型判断：
+       · 有 .opts:not(.row2) → 选择题：印 ○ 选项，涂黑作答，不给横线
+       · 其余（有 .waptr） → 填空/简答：给 5~6 行横线
+     ------------------------------------------------------------------ */
+  function collect(dayId){
+    var sec=document.getElementById(dayId);
+    if(!sec) return null;
+    var dnum=(sec.querySelector('.dnum')||{textContent:''}).textContent;
+    var ttl=(sec.querySelector('.dttl')||{textContent:''}).textContent;
+    var list=[];
+    sec.querySelectorAll('.qt').forEach(function(qt){
+      var stem=qt.querySelector('.stem');
+      if(!stem) return;
+      var wrap=qt.closest('.qwrap');
+      var qnoEl=wrap ? wrap.querySelector('.qno') : null;
+      var mcOpts=qt.querySelector('.opts:not(.row2)'); // 选择题的选项组
+      var wap=qt.querySelector('.waptr');
+      var it={s:stem.innerHTML, q:qnoEl?qnoEl.textContent:'', kind:'', mc:null, n:0};
+      if(mcOpts){
+        var arr=[];
+        mcOpts.querySelectorAll('label.opt').forEach(function(lb){
+          var mk=lb.querySelector('.mk'), ot=lb.querySelector('.ot');
+          arr.push({k:mk?mk.textContent:'', v:ot?ot.innerHTML:''});
+        });
+        it.kind='mc'; it.mc=arr;
+      }else{
+        var k=(wap&&wap.dataset)?wap.dataset.kind:'fill';
+        it.kind=k;
+        it.n=(k==='judge')?6:5;
+      }
+      list.push(it);
+    });
+    return {dnum:dnum, ttl:ttl, list:list};
+  }
+
+  /* 题干 + 选项/横线 → HTML 片段（两个出口共用） */
+  function itemsHtml(list, cls){
+    var h='';
+    list.forEach(function(it){
+      h+='<div class="'+cls.q+'"><div class="'+cls.qh+'">'+it.q+'</div>'
+        +'<div class="'+cls.qt+'">'+it.s+'</div>';
+      if(it.kind==='mc'){
+        h+='<div class="'+cls.orow+'">';
+        (it.mc||[]).forEach(function(o){
+          h+='<span class="'+cls.oc+'">○ <b>'+o.k+'．</b>'+o.v+'</span>';
+        });
+        h+='</div>';
+      }else{
+        for(var k=0;k<it.n;k++){ h+='<div class="'+cls.ln+'">&nbsp;</div>'; }
+      }
+      h+='</div>';
+    });
+    return h;
+  }
+
+  /* 把内容包成 Word 能打开的 HTML（.doc） */
+  function toWordHtml(title, bodyHtml){
+    return '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+      + 'xmlns:w="urn:schemas-microsoft-com:office:word" '
+      + 'xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8">'
+      + '<title>' + title + '</title>'
+      + '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View>'
+      + '<w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->'
+      + '<style>'
+      + '@page{size:A4;mso-page-orientation:portrait;margin:1.5cm 1.41cm;}'
+      + 'body{font-family:"宋体",SimSun;font-size:12pt;line-height:1.4;color:#000;}'
+      + '.cv{font-size:18pt;font-weight:bold;text-align:center;margin-bottom:6pt;}'
+      + '.sub{font-size:10.5pt;text-align:center;color:#555;margin-bottom:14pt;}'
+      + '.info{font-size:10.5pt;border-bottom:1px solid #bbb;padding-bottom:6pt;margin-bottom:10pt;}'
+      + '.tip{font-size:10.5pt;color:#555;background:#f2f2f2;padding:6pt 8pt;margin-bottom:12pt;}'
+      + '.day{page-break-before:always;}'
+      + '.dh{font-size:14pt;font-weight:bold;border-bottom:1.5pt solid #333;padding-bottom:4pt;margin-bottom:8pt;}'
+      + '.dh2{font-size:10.5pt;color:#666;margin-top:2pt;}'
+      + '.q{margin:0 0 10pt 0;page-break-inside:avoid;}'
+      + '.qh{font-size:13pt;font-weight:bold;margin-bottom:3pt;}'
+      + '.qt2{font-size:12pt;margin-bottom:3pt;}'
+      + '.orow{margin:2pt 0 3pt 12pt;font-size:12pt;}'
+      + '.oc{margin-right:2.2em;white-space:nowrap;}'
+      + '.ln{border-bottom:1px solid #999;height:22pt;}'
+      + '.end{font-size:10pt;color:#888;text-align:center;margin-top:10pt;}'
+      + '</style></head><body>' + bodyHtml + '</body></html>';
+  }
+
+  function download(html, filename){
+    var blob=new Blob(['\ufeff'+html], {type:'application/msword;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.appendChild(a); URL.revokeObjectURL(url); },1500);
+  }
+
+  var TIP='① 选择题：在所选选项前的 ○ 里涂黑。　② 填空/简答：写出完整步骤，语文题分条写（①②③）。'
+        + '　③ 做完拍照或扫描，作为批改依据并录入错题库。';
+
+  /* 单日下载 */
+  function downloadDay(dayId){
+    var d=collect(dayId);
+    if(!d||!d.list.length){ alert('这一天没有题目。'); return; }
+    var b='';
+    b+='<div class="cv">'+d.dnum+' 作答纸</div>';
+    b+='<div class="sub">'+d.ttl+'</div>';
+    b+='<div class="info">姓名：____________　　日期：____________　　用时：______ 分钟　　得分：______</div>';
+    b+='<div class="tip">'+TIP+'</div>';
+    b+=itemsHtml(d.list, {q:'q',qh:'qh',qt:'qt2',orow:'orow',oc:'oc',ln:'ln'});
+    b+='<div class="end">— 作答结束 · 共 '+d.list.length+' 题 —</div>';
+    var safe=(d.dnum||'Day').replace(/\s+/g,'');
+    download(toWordHtml(safe+' 作答纸', b), safe+'_作答纸.doc');
+  }
+
+  /* 打印（保留，部分环境可用） */
+  function printDay(dayId){
+    var d=collect(dayId);
+    if(!d||!d.list.length){ alert('这一天没有题目。'); return; }
+    var h='<div class="sheet">';
+    h+='<div class="sh1">'+d.dnum+' 作答纸</div><div class="sh2">'+d.ttl+'</div>';
+    h+='<div class="sh3">姓名：____________　　日期：____________　　用时：______ 分钟　　得分：______</div>';
+    h+='<div class="sh4">'+TIP+'</div>';
+    h+=itemsHtml(d.list, {q:'pq',qh:'ph',qt:'ps',orow:'orow',oc:'oc',ln:'ln'});
+    h+='<div class="sh5">— 作答结束 · 共 '+d.list.length+' 题 —</div></div>';
+    document.getElementById('printArea').innerHTML=h;
+    document.body.classList.add('print-sheet');
+    window.print();
+    setTimeout(function(){ document.body.classList.remove('print-sheet'); }, 1500);
+  }
+
+  function addBars(){
+    document.querySelectorAll('.daysec').forEach(function(sec){
+      if(sec.querySelector('.printbar')) return;
+      var bar=document.createElement('div');
+      bar.className='printbar';
+
+      var b1=document.createElement('button');
+      b1.type='button'; b1.className='pbtn';
+      b1.innerHTML='\u2B07 下载今天的作答纸（Word）';
+      b1.onclick=function(){ downloadDay(sec.id); };
+      bar.appendChild(b1);
+
+      var b2=document.createElement('button');
+      b2.type='button'; b2.className='pbtn pbtn2';
+      b2.innerHTML='\uD83D\uDDA8 直接打印';
+      b2.onclick=function(){ printDay(sec.id); };
+      bar.appendChild(b2);
+
+      var hint=document.createElement('div');
+      hint.className='printhint';
+      hint.innerHTML='本页含当天<b>全部题目</b>（选择题涂 ○，填空/简答写步骤）。'
+        + '推荐用「下载 Word」——下载后双击用 Word / WPS 打开即可打印'
+        + '（内嵌预览里直接打印常被浏览器拦住）。也可以直接用配套的'
+        + '<b>学生_七天作答纸合集.docx</b>，题号与本页一致。';
+      bar.appendChild(hint);
+      sec.appendChild(bar);
+    });
+  }
+
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',addBars); }
+  else { addBars(); }
+  window.onafterprint=function(){ document.body.classList.remove('print-sheet'); };
+})();
+</script>

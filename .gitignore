@@ -1,0 +1,31 @@
+# 个人数据一律不入库
+data/*
+!data/README.md
+*.sqlite
+*.sqlite3
+*.db
+*.csv
+*.xlsx
+*.docx
+*.pdf
+*.png
+*.jpg
+# 🔴 凭证与 key 一律不入库（使用者自己的凭证文件也不要提交）
+.env
+*.env
+credentials.json
+*credentials*.json
+*token*.json
+*.pem
+*.key
+*.p12
+*.pfx
+# 运行产物
+__pycache__/
+*.pyc
+*.pyo
+*.bak
+*.log
+.DS_Store
+.venv/
+venv/

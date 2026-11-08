@@ -1,0 +1,882 @@
+{
+  "version": 1,
+  "owner": "duoduo-learning-system",
+  "count": 28,
+  "contracts": [
+    {
+      "name": "duoduo-learning-system",
+      "layer": "orchestrator",
+      "role": "总调度 + 错题数据主库",
+      "triggers": [
+        "学生",
+        "错题",
+        "作答纸",
+        "答案册",
+        "讲义",
+        "任务单",
+        "录入错题",
+        "复习安排",
+        "家长沟通",
+        "整理错题",
+        "今天学什么",
+        "复习任务"
+      ],
+      "inputs": [
+        "学情分析PDF",
+        "练习册照片",
+        "错题原题",
+        "作答纸照片或答案JSON"
+      ],
+      "outputs": [
+        "网页讲义",
+        "作答纸docx/html",
+        "答案册docx/html",
+        "批改报告",
+        "增量SQL"
+      ],
+      "subjects": [
+        "数学",
+        "语文",
+        "英语"
+      ],
+      "priority": 1,
+      "source": "external:本技能本体（总调度）",
+      "bundled": false,
+      "fallback": "—",
+      "external_note": "本技能本体（总调度）"
+    },
+    {
+      "name": "mingbian-error-attribution",
+      "layer": "content",
+      "role": "错因归因（数学）",
+      "triggers": [
+        "错因",
+        "归因",
+        "为什么错",
+        "错在第几步",
+        "讲评课",
+        "分层再练",
+        "这题错在哪",
+        "老是错",
+        "反复错",
+        "同类题还错"
+      ],
+      "inputs": [
+        "原题",
+        "学生错解过程",
+        "班级正确率"
+      ],
+      "outputs": [
+        "证据链",
+        "主次错因",
+        "A/B/C分层再练题组",
+        "讲评课建议"
+      ],
+      "subjects": [
+        "数学"
+      ],
+      "priority": 2,
+      "source": "bundled-skills/mingbian-error-attribution/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.attribute_error()：13 值 error_type 枚举 + 三段式归因",
+      "external_note": ""
+    },
+    {
+      "name": "mingbian-tiered-variation",
+      "layer": "content",
+      "role": "分层变式命题（数学）",
+      "triggers": [
+        "变式题",
+        "分层命题",
+        "专项题组",
+        "培优补差题",
+        "专项练习",
+        "分层练习",
+        "专项训练",
+        "变式练习",
+        "要分层",
+        "出几道同类题",
+        "再来几道"
+      ],
+      "inputs": [
+        "知识点",
+        "或一道母题"
+      ],
+      "outputs": [
+        "A通道多题型题组 / B通道基础-提升-拓展三层变式",
+        "附答案与命题意图"
+      ],
+      "subjects": [
+        "数学"
+      ],
+      "priority": 3,
+      "source": "bundled-skills/mingbian-tiered-variation/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.tiered_variation()：A/B/C 三档变式生成规则",
+      "external_note": ""
+    },
+    {
+      "name": "mingbian-paper-blueprint",
+      "layer": "content",
+      "role": "组卷与双向细目表（数学）",
+      "triggers": [
+        "出卷",
+        "组卷",
+        "命题",
+        "双向细目表",
+        "周测卷",
+        "模拟卷",
+        "出一套卷",
+        "出卷子",
+        "单元测试卷",
+        "按考点出题"
+      ],
+      "inputs": [
+        "教材版本",
+        "年级",
+        "范围",
+        "用途",
+        "总分",
+        "时长"
+      ],
+      "outputs": [
+        "双向细目表",
+        "试卷",
+        "答案",
+        "分步评分标准"
+      ],
+      "subjects": [
+        "数学"
+      ],
+      "priority": 2,
+      "source": "bundled-skills/mingbian-paper-blueprint/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.paper_blueprint()：组卷细目表结构",
+      "external_note": ""
+    },
+    {
+      "name": "study-methods-lookup",
+      "layer": "content",
+      "role": "方法卡检索（8学科16学段）",
+      "triggers": [
+        "学习方法",
+        "解题技巧",
+        "怎么记",
+        "怎么学",
+        "记不住",
+        "怎么背",
+        "有什么方法"
+      ],
+      "inputs": [
+        "学科",
+        "学段",
+        "题型或知识点"
+      ],
+      "outputs": [
+        "结构化方法卡",
+        "步骤",
+        "易错提示"
+      ],
+      "subjects": [
+        "数学",
+        "物理",
+        "化学",
+        "生物",
+        "语文",
+        "英语",
+        "历史",
+        "地理"
+      ],
+      "priority": 4,
+      "source": "bundled-skills/study-methods-lookup/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.method_lookup()：方法索引与命中规则",
+      "external_note": ""
+    },
+    {
+      "name": "junior-school-portal",
+      "layer": "content",
+      "role": "初中全科知识口径与学习方法",
+      "triggers": [
+        "知识点讲解",
+        "概念辨析",
+        "复习方法",
+        "备考建议",
+        "讲讲这个概念",
+        "这个概念怎么理解",
+        "知识点没听懂"
+      ],
+      "inputs": [
+        "学科",
+        "知识点"
+      ],
+      "outputs": [
+        "知识梳理",
+        "方法建议"
+      ],
+      "subjects": [
+        "数学",
+        "物理",
+        "化学",
+        "英语",
+        "语文",
+        "历史",
+        "道法"
+      ],
+      "priority": 4,
+      "source": "bundled-skills/junior-school-portal/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.concept_glossary()：初中概念口径校验",
+      "external_note": ""
+    },
+    {
+      "name": "study-guide-html",
+      "layer": "content",
+      "role": "复习讲义生产线（版式与批量）",
+      "triggers": [
+        "复习讲义",
+        "学科复习系列",
+        "做一册",
+        "批量出册",
+        "做一本讲义",
+        "整理成册"
+      ],
+      "inputs": [
+        "学科",
+        "章节或专题",
+        "册次计划"
+      ],
+      "outputs": [
+        "单文件HTML复习讲义系列"
+      ],
+      "subjects": [
+        "数学",
+        "英语",
+        "语文",
+        "历史",
+        "政治",
+        "地理",
+        "化学",
+        "物理",
+        "生物",
+        "科学",
+        "社会"
+      ],
+      "priority": 5,
+      "source": "bundled-skills/study-guide-html/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/lecture_dsl.py + assets/print.css",
+      "external_note": ""
+    },
+    {
+      "name": "socrates-math-coach",
+      "layer": "content",
+      "role": "交互式数学实验",
+      "triggers": [
+        "数学实验",
+        "交互动图",
+        "几何画板",
+        "动点最值",
+        "函数图像可视化",
+        "画图看看",
+        "动一下图"
+      ],
+      "inputs": [
+        "数学问题"
+      ],
+      "outputs": [
+        "交互式推演可视化"
+      ],
+      "subjects": [
+        "数学"
+      ],
+      "priority": 6,
+      "source": "bundled-skills/socrates-math-coach/SKILL.md",
+      "bundled": true,
+      "fallback": "assets/figs/*.svg 程序框图示例 + 手工讲解，不生成交互页",
+      "external_note": ""
+    },
+    {
+      "name": "muma-learning-expert",
+      "layer": "content",
+      "role": "理化生自主学习平台",
+      "triggers": [
+        "物理",
+        "化学",
+        "自主学习平台"
+      ],
+      "inputs": [
+        "学科"
+      ],
+      "outputs": [
+        "讲解",
+        "探究",
+        "理解检验"
+      ],
+      "subjects": [
+        "物理",
+        "化学",
+        "数学"
+      ],
+      "priority": 6,
+      "source": "bundled-skills/muma-learning-expert/SKILL.md",
+      "bundled": true,
+      "fallback": "references/learning-science.md / icap-framework.md",
+      "external_note": ""
+    },
+    {
+      "name": "local-ocr",
+      "layer": "tool",
+      "role": "本地离线 OCR（RapidOCR），读取通道的印刷体基准",
+      "triggers": [
+        "扫描件识别",
+        "OCR",
+        "拍照试卷",
+        "老卷子",
+        "印刷体提取"
+      ],
+      "inputs": [
+        "图片或扫描PDF"
+      ],
+      "outputs": [
+        "逐行文本 + 可选坐标与置信度"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 2,
+      "source": "bundled-skills/local-ocr/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/quark_ocr.py（需自备凭证）或纯文本输入",
+      "external_note": ""
+    },
+    {
+      "name": "exercise-assistant",
+      "layer": "content",
+      "role": "K12 五段讲解骨架（审题→思路→解答→检查→举一反三）",
+      "triggers": [
+        "五段讲解",
+        "思路怎么讲",
+        "举一反三",
+        "这题讲清楚",
+        "这题怎么做",
+        "讲一下这道题",
+        "思路是什么"
+      ],
+      "inputs": [
+        "题目",
+        "学段",
+        "学科",
+        "题型"
+      ],
+      "outputs": [
+        "PROBE/STRATEGY/RUN/CHECK/TRANSFER 五段结构"
+      ],
+      "subjects": [
+        "数学",
+        "语文",
+        "英语",
+        "物理",
+        "化学",
+        "生物",
+        "历史",
+        "地理"
+      ],
+      "priority": 5,
+      "source": "bundled-skills/exercise-assistant/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/duoduo_query.py + make_answer_* 系列",
+      "external_note": ""
+    },
+    {
+      "name": "homework-explain-card",
+      "layer": "content",
+      "role": "家长口播讲题卡（先问再讲，不给可抄答案）",
+      "triggers": [
+        "我怎么跟他讲",
+        "家长讲题",
+        "别直接给答案",
+        "辅导作业怎么开口",
+        "怎么给孩子讲",
+        "辅导时怎么问"
+      ],
+      "inputs": [
+        "题目",
+        "年级",
+        "孩子卡在哪"
+      ],
+      "outputs": [
+        "3 个启发问句 + 讲法步骤 + 单独放在最后的答案区"
+      ],
+      "subjects": [
+        "数学",
+        "语文",
+        "英语"
+      ],
+      "priority": 7,
+      "source": "bundled-skills/homework-explain-card/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.explain_card()：3 个启发问句 + 答案后置",
+      "external_note": ""
+    },
+    {
+      "name": "class-analysis-junior",
+      "layer": "content",
+      "role": "学情诊断报告的 3-2-1 建议结构",
+      "triggers": [
+        "学情分析",
+        "3-2-1建议",
+        "阶段总结怎么写",
+        "这阶段学得怎么样"
+      ],
+      "inputs": [
+        "成绩或得分明细",
+        "知识点掌握表"
+      ],
+      "outputs": [
+        "3 项立即行动 / 2 项中期调整 / 1 项长期机制"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 7,
+      "source": "bundled-skills/class-analysis-junior/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/metrics.py + duoduo_query.py stats",
+      "external_note": ""
+    },
+    {
+      "name": "grade9-chinese-error-diagnosis-core",
+      "layer": "content",
+      "role": "语文错因诊断（A–G 七类）",
+      "triggers": [
+        "语文错题",
+        "语文错因",
+        "阅读不会",
+        "作文偏题",
+        "文言文翻译错",
+        "名著题错",
+        "采分点",
+        "语文阅读老丢分",
+        "文言文看不懂"
+      ],
+      "inputs": [
+        "语文题目",
+        "学生作答",
+        "口述思路"
+      ],
+      "outputs": [
+        "考点定位",
+        "采分点拆解",
+        "A–G 主因次因",
+        "答题模板",
+        "记忆口诀"
+      ],
+      "subjects": [
+        "语文"
+      ],
+      "priority": 3,
+      "source": "bundled-skills/grade9-chinese-error-diagnosis-core/SKILL.md",
+      "bundled": true,
+      "fallback": "references/three-subject-error-categories.md 语文 A–G 七类",
+      "external_note": ""
+    },
+    {
+      "name": "chinese-essay-grading-assistant",
+      "layer": "content",
+      "role": "语文作文批改（小初高通用）",
+      "triggers": [
+        "作文批改",
+        "改作文",
+        "作文评语",
+        "作文打分",
+        "升格",
+        "帮我看看作文"
+      ],
+      "inputs": [
+        "作文文本或图片",
+        "学段",
+        "批改重点"
+      ],
+      "outputs": [
+        "分项打分",
+        "逐段批注",
+        "病句错别字修正",
+        "总评",
+        "升格建议"
+      ],
+      "subjects": [
+        "语文"
+      ],
+      "priority": 4,
+      "source": "bundled-skills/chinese-essay-grading-assistant/SKILL.md",
+      "bundled": true,
+      "fallback": "references/learning-science.md + 只批改不代写原则",
+      "external_note": ""
+    },
+    {
+      "name": "english-tutor",
+      "layer": "content",
+      "role": "英语错题批改讲解（作文/阅读/完形/语法）",
+      "triggers": [
+        "英语批改",
+        "英语作文",
+        "完形填空",
+        "阅读理解",
+        "长难句",
+        "英语讲解",
+        "英语这句对吗",
+        "英语怎么改"
+      ],
+      "inputs": [
+        "英语题目",
+        "学生作答",
+        "练习类型"
+      ],
+      "outputs": [
+        "批改意见",
+        "讲解",
+        "知识点归纳",
+        "资源推荐",
+        "学习路径"
+      ],
+      "subjects": [
+        "英语"
+      ],
+      "priority": 3,
+      "source": "bundled-skills/english-tutor/SKILL.md",
+      "bundled": true,
+      "fallback": "references/three-subject-error-categories.md 英语分门",
+      "external_note": ""
+    },
+    {
+      "name": "english-vocab",
+      "layer": "content",
+      "role": "英语词汇（单词表 / 周期复习 / 词根词缀）",
+      "triggers": [
+        "背单词",
+        "词汇",
+        "拼写错",
+        "单词表",
+        "词根词缀",
+        "单词总记不住"
+      ],
+      "inputs": [
+        "单词范围",
+        "学段"
+      ],
+      "outputs": [
+        "单词表",
+        "周期复习计划",
+        "练习",
+        "记忆策略"
+      ],
+      "subjects": [
+        "英语"
+      ],
+      "priority": 5,
+      "source": "bundled-skills/english-vocab/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/duoduo_query.py search + export_csv.py",
+      "external_note": ""
+    },
+    {
+      "name": "edu-reading-diagnose",
+      "layer": "content",
+      "role": "语文阅读理解家长侧速查",
+      "triggers": [
+        "阅读丢分",
+        "阅读理解不会",
+        "阅读错因",
+        "伴读",
+        "读不懂文章"
+      ],
+      "inputs": [
+        "阅读题",
+        "学生答案"
+      ],
+      "outputs": [
+        "七类常见错因自查",
+        "答题思路",
+        "家庭伴读建议"
+      ],
+      "subjects": [
+        "语文"
+      ],
+      "priority": 6,
+      "source": "bundled-skills/edu-reading-diagnose/SKILL.md",
+      "bundled": true,
+      "fallback": "references/answer-sheet.md §8 阅读题规范",
+      "external_note": ""
+    },
+    {
+      "name": "english-exam-authoring",
+      "layer": "content",
+      "role": "英语命题（日常练习 / 中招模拟双模式）",
+      "triggers": [
+        "出英语题",
+        "英语命题",
+        "英语练习卷",
+        "单元测试",
+        "改编语篇",
+        "试题质检",
+        "出一份英语卷"
+      ],
+      "inputs": [
+        "考点清单",
+        "教材单元",
+        "学情数据"
+      ],
+      "outputs": [
+        "英语试题",
+        "学生版 docx",
+        "教师版 docx",
+        "五维质检结论"
+      ],
+      "subjects": [
+        "英语"
+      ],
+      "priority": 4,
+      "source": "bundled-skills/english-exam-authoring/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/qtypes.py + make_answer_key.py",
+      "external_note": ""
+    },
+    {
+      "name": "english-learning-card-generator",
+      "layer": "content",
+      "role": "英语课文学习卡片（原文/词汇/翻译/填空）",
+      "triggers": [
+        "学习卡片",
+        "课文卡片",
+        "词汇填空",
+        "预习卡片",
+        "做个背诵卡"
+      ],
+      "inputs": [
+        "英语课文文本"
+      ],
+      "outputs": [
+        "图文卡片图片",
+        "关键词汇",
+        "中文翻译",
+        "词汇填空练习"
+      ],
+      "subjects": [
+        "英语"
+      ],
+      "priority": 6,
+      "source": "bundled-skills/english-learning-card-generator/SKILL.md",
+      "bundled": true,
+      "fallback": "scripts/make_answer_html.py 卡片版式",
+      "external_note": ""
+    },
+    {
+      "name": "study-planner",
+      "layer": "content",
+      "role": "学习计划的渐进式三层展开",
+      "triggers": [
+        "学习计划",
+        "周计划怎么排",
+        "复习安排",
+        "备考规划",
+        "排个计划",
+        "怎么安排复习"
+      ],
+      "inputs": [
+        "目标",
+        "截止日",
+        "每日可用时长"
+      ],
+      "outputs": [
+        "粗略大纲 → 周任务清单 → 每日卡片（按需逐层展开）"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 7,
+      "source": "bundled-skills/study-planner/SKILL.md",
+      "bundled": true,
+      "fallback": "skill_contracts.study_plan()：三层计划（学期/周/日）",
+      "external_note": ""
+    },
+    {
+      "name": "pdf",
+      "layer": "tool",
+      "role": "纯 PDF 操作（合并/拆分/加密/转图/表单）",
+      "triggers": [
+        "合并PDF",
+        "拆分PDF",
+        "PDF加密",
+        "PDF转图片",
+        "表单填写"
+      ],
+      "inputs": [
+        "PDF 文件"
+      ],
+      "outputs": [
+        "处理后 PDF 或图片"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方 PDF 解析工具，请自行安装；本技能按路由表禁止它接手手写作业",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py（坐标重排，符号不错位）",
+      "external_note": "第三方 PDF 解析工具，请自行安装；本技能按路由表禁止它接手手写作业"
+    },
+    {
+      "name": "pdfkit-py",
+      "layer": "tool",
+      "role": "PDF 工具箱（含 tesseract OCR 降级）",
+      "triggers": [
+        "PDF提取",
+        "PDF编辑",
+        "OCR降级",
+        "扫描件提取"
+      ],
+      "inputs": [
+        "PDF 文件"
+      ],
+      "outputs": [
+        "文本/图片/新 PDF"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方 PDF 工具包，请自行安装",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py",
+      "external_note": "第三方 PDF 工具包，请自行安装"
+    },
+    {
+      "name": "markitdown",
+      "layer": "tool",
+      "role": "文档转 Markdown（通用格式转换）",
+      "triggers": [
+        "转markdown",
+        "文档转换",
+        "docx转md"
+      ],
+      "inputs": [
+        "各类文档"
+      ],
+      "outputs": [
+        "Markdown"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方文档转换工具，请自行安装",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py",
+      "external_note": "第三方文档转换工具，请自行安装"
+    },
+    {
+      "name": "wj-pdf2md",
+      "layer": "tool",
+      "role": "PDF 转 Markdown（三级路由）",
+      "triggers": [
+        "PDF转md",
+        "扫描件转md",
+        "版面分析"
+      ],
+      "inputs": [
+        "PDF"
+      ],
+      "outputs": [
+        "document.md + 图片资产 + 转换报告"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方 PDF→MD 工具；矢量 PDF 优先走本技能 ingest_source.py",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py",
+      "external_note": "第三方 PDF→MD 工具；矢量 PDF 优先走本技能 ingest_source.py"
+    },
+    {
+      "name": "universal-doc-reader",
+      "layer": "tool",
+      "role": "万能文档解析（MinerU 引擎）",
+      "triggers": [
+        "解析文档",
+        "文档转md",
+        "本地文档库"
+      ],
+      "inputs": [
+        "PDF/图片/Office/EPUB"
+      ],
+      "outputs": [
+        "可定位 Markdown"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方通用文档读取器，请自行安装",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py",
+      "external_note": "第三方通用文档读取器，请自行安装"
+    },
+    {
+      "name": "xc-doc-parser-workbuddy",
+      "layer": "tool",
+      "role": "星辰文档解析（云端）",
+      "triggers": [
+        "文档解析",
+        "图片转文字",
+        "OCR"
+      ],
+      "inputs": [
+        "PDF/图片"
+      ],
+      "outputs": [
+        "Markdown/JSON"
+      ],
+      "subjects": [
+        "all"
+      ],
+      "priority": 9,
+      "source": "external:第三方解析技能；其自称的高优先级在本技能管辖内不成立",
+      "bundled": false,
+      "fallback": "scripts/ingest_source.py；手写材料必须走 quark_ocr.py",
+      "external_note": "第三方解析技能；其自称的高优先级在本技能管辖内不成立"
+    },
+    {
+      "name": "cn-math-taxonomy",
+      "layer": "tool",
+      "role": "课标知识点图谱 + 先修依赖图 + 补充题库（**参考层，非分析主力**）",
+      "triggers": [
+        "根因回溯",
+        "先修关系",
+        "这道题该补哪个先修",
+        "课标条目",
+        "补充题源",
+        "知识点先后"
+      ],
+      "inputs": [
+        "cn 知识点 id",
+        "学生 knowledge_point"
+      ],
+      "outputs": [
+        "先修链(含原因说明)",
+        "薄弱根因候选",
+        "课标条目",
+        "补充题目"
+      ],
+      "subjects": [
+        "数学"
+      ],
+      "priority": 8,
+      "source": "external:公开的初中数学题型分类参考层（GitHub 可获取），仅作参考不作主力",
+      "bundled": false,
+      "fallback": "references/three-subject-error-categories.md（本技能自有分类）",
+      "external_note": "公开的初中数学题型分类参考层（GitHub 可获取），仅作参考不作主力"
+    }
+  ]
+}

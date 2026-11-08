@@ -1,0 +1,52 @@
+{
+  "title": "错题记录声明（对应 SQLite errors 表 + 状态机）",
+  "version": "1.0.0",
+  "fields": {
+    "id": "int 自增主键",
+    "date": "string 录入日期, 必填",
+    "subject": "enum[英语|数学], 必填",
+    "chapter": "string, 必填",
+    "knowledge_point": "string, 必填",
+    "error_desc": "string 错误描述, 必填",
+    "correct_answer": "string, 必填",
+    "error_level": "enum[1级|2级|3级|4级|5级], 必填(5级=最严重)",
+    "source": "string 来源(Kimi会话/PDF/图片), 必填",
+    "severity": "enum[🔴|🟡|🟢], 默认🟡",
+    "status": "enum[active|cleared|duplicate-merged|resolved|reviewing], 默认active",
+    "correct_streak": "int 连续答对次数, 默认0",
+    "last_fail_at": "string 最近一次答错时间, 可选",
+    "source_session": "string 来源会话, 可选"
+  },
+  "state_machine": {
+    "active": "待验证(🆕)",
+    "reviewing": "练习中(🔄)",
+    "resolved": "已掌握(✅) — 条件: correct_streak>=3 自动 或 resolved_at非空(人工确认消除)",
+    "cleared": "已清除(error_type=correct本非错题或确认掌握)",
+    "duplicate-merged": "合并去重",
+    "unresolve": "resolved又错 → 回active, correct_streak=0"
+  },
+  "status_transition": "status 只经 CLI 修改; 闭环=代码状态机; 再犯=last_fail_at自动回退",
+  "examples": [
+    {
+      "subject": "数学",
+      "chapter": "有理数",
+      "knowledge_point": "去括号变号",
+      "error_desc": "-(a-b) 误写成 -a-b",
+      "correct_answer": "-a+b",
+      "error_level": "3级",
+      "status": "reviewing",
+      "correct_streak": 1
+    },
+    {
+      "subject": "英语",
+      "chapter": "Unit 3",
+      "knowledge_point": "现在完成时",
+      "error_desc": "have/has 主谓不一致",
+      "correct_answer": "has done",
+      "error_level": "2级",
+      "status": "active",
+      "correct_streak": 0
+    }
+  ],
+  "resolve_rule": "resolved 合法条件 = correct_streak>=3(状态机自动) 或 resolved_at非空(人工确认)；cleared=error_type=correct/确认掌握"
+}

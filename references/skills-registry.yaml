@@ -1,0 +1,429 @@
+# 初中学习技能调度注册表
+# 作用：编排时查表决定「调谁、给什么、产出什么、冲突谁让路」。
+# 维护：duoduo-learning-system 为总调度，本文件是它唯一的调度真值。
+# 阶段19 建（架构审计 P2-4）
+
+meta:
+  owner: duoduo-learning-system
+  updated: 阶段19
+  usage: 每次出题/讲义/批改/视频推荐前先查本表；命中多条按 priority 升序，只用第一条为主，其余作补充。
+
+skills:
+
+  - name: duoduo-learning-system
+    layer: orchestrator
+    role: 总调度 + 错题数据主库
+    triggers: [学生, 错题, 作答纸, 答案册, 讲义, 任务单, 录入错题, 复习安排, 家长沟通]
+    inputs: [学情分析PDF, 练习册照片, 错题原题, 作答纸照片或答案JSON]
+    outputs: [网页讲义, 作答纸docx/html, 答案册docx/html, 批改报告, 增量SQL]
+    subjects: [数学, 语文, 英语]
+    writes_db: true # 学习记录只写这里
+    priority: 1
+
+  - name: mingbian-error-attribution
+    layer: content
+    role: 错因归因（数学）
+    triggers: [错因, 归因, 为什么错, 错在第几步, 讲评课, 分层再练]
+    inputs: [原题, 学生错解过程, 班级正确率]
+    outputs: [证据链, 主次错因, A/B/C分层再练题组, 讲评课建议]
+    subjects: [数学]
+    writes_db: false
+    priority: 2
+    reuse: duoduo 的 §2 归因三段式直接源自它；A/B/C 分层题组已接入出题环节
+
+  - name: mingbian-tiered-variation
+    layer: content
+    role: 分层变式命题（数学）
+    triggers: [变式题, 分层命题, 专项题组, 培优补差题]
+    inputs: [知识点, 或一道母题]
+    outputs: [A通道多题型题组 / B通道基础-提升-拓展三层变式, 附答案与命题意图]
+    subjects: [数学]
+    writes_db: false
+    priority: 3
+
+  - name: mingbian-paper-blueprint
+    layer: content
+    role: 组卷与双向细目表（数学）
+    triggers: [出卷, 组卷, 命题, 双向细目表, 周测卷, 模拟卷]
+    inputs: [教材版本, 年级, 范围, 用途, 总分, 时长]
+    outputs: [双向细目表, 试卷, 答案, 分步评分标准]
+    subjects: [数学]
+    writes_db: false
+    priority: 2
+    reuse: Day7 阶段测评（15 题）应由它先出蓝图再命题，替代手工排卷
+
+  - name: study-methods-lookup
+    layer: content
+    role: 方法卡检索（8学科16学段）
+    triggers: [学习方法, 解题技巧, 怎么记, 怎么学]
+    inputs: [学科, 学段, 题型或知识点]
+    outputs: [结构化方法卡, 步骤, 易错提示]
+    subjects: [数学, 物理, 化学, 生物, 语文, 英语, 历史, 地理]
+    writes_db: false
+    priority: 4
+    reuse: 讲义「方法卡」环节统一从它检索，不硬编码
+
+  - name: junior-school-portal
+    layer: content
+    role: 初中全科知识口径与学习方法
+    triggers: [知识点讲解, 概念辨析, 复习方法, 备考建议]
+    inputs: [学科, 知识点]
+    outputs: [知识梳理, 方法建议]
+    subjects: [数学, 物理, 化学, 英语, 语文, 历史, 道法]
+    writes_db: false
+    priority: 4
+
+  - name: study-guide-html
+    layer: content
+    role: 复习讲义生产线（版式与批量）
+    triggers: [复习讲义, 学科复习系列, 做一册, 批量出册]
+    inputs: [学科, 章节或专题, 册次计划]
+    outputs: [单文件HTML复习讲义系列]
+    subjects: [数学, 英语, 语文, 历史, 政治, 地理, 化学, 物理, 生物, 科学, 社会]
+    writes_db: false
+    priority: 5
+    boundary: >
+      与 duoduo 讲义流水线**分工不合并**：它负责「章节复习册」的版式与批量
+      （5 套骨架 + 57 个构建/审计脚本，双路径验算、覆盖率审计），
+      duoduo 负责「针对学生错题」的讲解+判分+作答纸+数据入库。
+      要成套复习册 → 调它；要学生这期错题讲义 → 用 duoduo。
+      可借鉴：{{SVG:}}自绘配图机制、骨架复用、双路径验算、多层 audit。
+
+  - name: socrates-math-coach
+    layer: content
+    role: 交互式数学实验
+    triggers: [数学实验, 交互动图, 几何画板, 动点最值, 函数图像可视化]
+    inputs: [数学问题]
+    outputs: [交互式推演可视化]
+    subjects: [数学]
+    writes_db: false
+    priority: 6
+    boundary: 触发词已收窄，**不要让它抢初中普通题的路由**
+
+  - name: muma-learning-expert
+    layer: content
+    role: 理化生自主学习平台
+    triggers: [物理, 化学, 自主学习平台]
+    inputs: [学科]
+    outputs: [讲解, 探究, 理解检验]
+    subjects: [物理, 化学, 数学]
+    writes_db: false
+    priority: 6
+    boundary: >
+      它自带本机学习空间并会记录学习过程。**学习记录只写 duoduo 错题库**，
+      muma 侧不落库，避免双写冲突。
+
+# ---------------- 已装但需登记的能力（阶段22 核对安装清单后补） ----------------
+
+  - name: local-ocr
+    layer: tool
+    role: 本地离线 OCR（RapidOCR），读取通道的印刷体基准
+    triggers: [扫描件识别, OCR, 拍照试卷, 老卷子, 印刷体提取]
+    inputs: [图片或扫描PDF]
+    outputs: [逐行文本 + 可选坐标与置信度]
+    subjects: [all]
+    writes_db: false
+    priority: 2
+    boundary: >
+      **只用于印刷体**。手写体识别率差，学生的手写作业/答案**一律不许用它**，
+      必须走视觉模型。与视觉模型结果不一致时以原图为准，两个结果都留档供复核，
+      不许二选一直接采用。需先跑 setup.py 部署（约 320MB，一次联网）。
+
+  - name: exercise-assistant
+    layer: content
+    role: K12 五段讲解骨架（审题→思路→解答→检查→举一反三）
+    triggers: [五段讲解, 思路怎么讲, 举一反三, 这题讲清楚]
+    inputs: [题目, 学段, 学科, 题型]
+    outputs: [PROBE/STRATEGY/RUN/CHECK/TRANSFER 五段结构]
+    subjects: [数学, 语文, 英语, 物理, 化学, 生物, 历史, 地理]
+    writes_db: false
+    priority: 5
+    boundary: >
+      **只借骨架，不整包调用**（它自带 evals/engine/ocr_router，重）。
+      讲义与答案册的「思路 + 详解 + 检查 + 举一反三」按这五段写，
+      保证每道题讲完都能被孩子自查。归因仍走 mingbian，不用它的 review-notebook。
+
+  - name: homework-explain-card
+    layer: content
+    role: 家长口播讲题卡（先问再讲，不给可抄答案）
+    triggers: [我怎么跟他讲, 家长讲题, 别直接给答案, 辅导作业怎么开口]
+    inputs: [题目, 年级, 孩子卡在哪]
+    outputs: [3 个启发问句 + 讲法步骤 + 单独放在最后的答案区]
+    subjects: [数学, 语文, 英语]
+    writes_db: false
+    priority: 7
+    boundary: >
+      **绝不输出可抄交的整页答案或整篇作文**，与「答案册零答案」铁律同源。
+      它管「用户怎么开口讲」，duoduo 管「题怎么出、分怎么判」，不重叠。
+
+  - name: class-analysis-junior
+    layer: content
+    role: 学情诊断报告的 3-2-1 建议结构
+    triggers: [学情分析, 3-2-1建议, 阶段总结怎么写]
+    inputs: [成绩或得分明细, 知识点掌握表]
+    outputs: [3 项立即行动 / 2 项中期调整 / 1 项长期机制]
+    subjects: [all]
+    writes_db: false
+    priority: 7
+    boundary: >
+      **它是「班级」维度，学生是单人** —— 只借 3-2-1 建议结构用于周计划与阶段总结，
+      分段画像（高/中/低分段）不适用，不要照搬。
+
+  - name: grade9-chinese-error-diagnosis-core
+    layer: content
+    role: 语文错因诊断（A–G 七类）
+    triggers: [语文错题, 语文错因, 阅读不会, 作文偏题, 文言文翻译错, 名著题错, 采分点]
+    inputs: [语文题目, 学生作答, 口述思路]
+    outputs: [考点定位, 采分点拆解, A–G 主因次因, 答题模板, 记忆口诀]
+    subjects: [语文]
+    writes_db: false
+    priority: 3
+    boundary: >
+      **这是补「语文归因」缺口的主力**（明辨三件套限数学）。错因按 A–G 七类，
+      与本技能的 13 值 `error_type` 不是同一套 —— 入库时按 §4.4 的映射表转换。
+      它明确不含变式训练、复习规划、错题卡片，这三项仍归本技能。
+      学段标注是初三，但对初一语文通用（七类框架不分学段）。
+
+  - name: chinese-essay-grading-assistant
+    layer: content
+    role: 语文作文批改（小初高通用）
+    triggers: [作文批改, 改作文, 作文评语, 作文打分, 升格]
+    inputs: [作文文本或图片, 学段, 批改重点]
+    outputs: [分项打分, 逐段批注, 病句错别字修正, 总评, 升格建议]
+    subjects: [语文]
+    writes_db: false
+    priority: 4
+    boundary: >
+      **只批改不代写** —— 与「答案册零答案」同源，绝不输出可抄交的整篇作文。
+      按学段切换评估标准，学生是初一，用初中学段标准，不要套中考/高考尺度。
+
+  - name: english-tutor
+    layer: content
+    role: 英语错题批改讲解（作文/阅读/完形/语法）
+    triggers: [英语批改, 英语作文, 完形填空, 阅读理解, 长难句, 英语讲解]
+    inputs: [英语题目, 学生作答, 练习类型]
+    outputs: [批改意见, 讲解, 知识点归纳, 资源推荐, 学习路径]
+    subjects: [英语]
+    writes_db: false
+    priority: 3
+    boundary: >
+      **补「英语归因」缺口**。自带写作批改法与阅读讲解法，
+      输出可直接对应 13 值里英语子集（spelling/grammar/semantic/collocation）。
+
+  - name: english-vocab
+    layer: content
+    role: 英语词汇（单词表 / 周期复习 / 词根词缀）
+    triggers: [背单词, 词汇, 拼写错, 单词表, 词根词缀]
+    inputs: [单词范围, 学段]
+    outputs: [单词表, 周期复习计划, 练习, 记忆策略]
+    subjects: [英语]
+    writes_db: false
+    priority: 5
+    boundary: >
+      学生英语错题里 `spelling` N条为各科各类之最，词汇是高频失分区。
+      只做词汇层，不做整份作业批改（那是 english-tutor）。
+
+  - name: edu-reading-diagnose
+    layer: content
+    role: 语文阅读理解家长侧速查
+    triggers: [阅读丢分, 阅读理解不会, 阅读错因, 伴读]
+    inputs: [阅读题, 学生答案]
+    outputs: [七类常见错因自查, 答题思路, 家庭伴读建议]
+    subjects: [语文]
+    writes_db: false
+    priority: 6
+    boundary: >
+      比 grade9 轻，面向家长速查，**不做采分点级精细诊断**（那走 grade9）。
+      两者冲突时：要入库的正式归因用 grade9，家长随口问用本技能。
+
+  - name: english-exam-authoring
+    layer: content
+    role: 英语命题（日常练习 / 中招模拟双模式）
+    triggers: [出英语题, 英语命题, 英语练习卷, 单元测试, 改编语篇, 试题质检]
+    inputs: [考点清单, 教材单元, 学情数据]
+    outputs: [英语试题, 学生版 docx, 教师版 docx, 五维质检结论]
+    subjects: [英语]
+    writes_db: false
+    priority: 4
+    boundary: >
+      **补「英语分层命题」缺口**（明辨分层变式限数学）。
+      用它的「日常模拟练习」模式下接教材与学情；出完必过五维质检。
+      ⚠️ 它默认河南中考题型结构与难度，**初一必须降难度减题型**，
+      不许整套照搬；分层仍按 A/B/C 三档（学 A=同型巩固、B=换数字、C=换场景）。
+      它出的是「卷」，不分层 —— 分层是调用方（本技能）的职责。
+
+  - name: english-learning-card-generator
+    layer: content
+    role: 英语课文学习卡片（原文/词汇/翻译/填空）
+    triggers: [学习卡片, 课文卡片, 词汇填空, 预习卡片]
+    inputs: [英语课文文本]
+    outputs: [图文卡片图片, 关键词汇, 中文翻译, 词汇填空练习]
+    subjects: [英语]
+    writes_db: false
+    priority: 6
+    boundary: >
+      用于课前预习与词汇巩固，**不是出题工具**（出题走 english-exam-authoring）。
+      题目难度自动对齐课文，不需要额外调。
+
+  - name: study-planner
+    layer: content
+    role: 学习计划的渐进式三层展开
+    triggers: [学习计划, 周计划怎么排, 复习安排, 备考规划]
+    inputs: [目标, 截止日, 每日可用时长]
+    outputs: [粗略大纲 → 周任务清单 → 每日卡片（按需逐层展开）]
+    subjects: [all]
+    writes_db: false
+    priority: 7
+    boundary: >
+      **只借「渐进式三层」这一个机制**，排期硬约束仍用本技能 §7（20:15 到家、
+      22:00 红线、105 分钟切块、周日全休）。它的通用模板不要照搬 ——
+      那些约束是学生的实际情况，任何模板都替代不了。
+
+
+# ---------------- 冲突处理规则 ----------------
+  # ===== 非主链工具技能（阶段22 补登记，按 §0.9 路由声明排最后）=====
+  - name: pdf
+    layer: tool
+    role: 纯 PDF 操作（合并/拆分/加密/转图/表单）
+    triggers: [合并PDF, 拆分PDF, PDF加密, PDF转图片, 表单填写]
+    inputs: [PDF 文件]
+    outputs: [处理后 PDF 或图片]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      **只做 PDF 操作，不承担识别**。它的 OCR 走 tesseract，中文手写与公式都不如夸克，
+      不要用它读学生的卷子。见 §0.9 路由声明。
+
+  - name: pdfkit-py
+    layer: tool
+    role: PDF 工具箱（含 tesseract OCR 降级）
+    triggers: [PDF提取, PDF编辑, OCR降级, 扫描件提取]
+    inputs: [PDF 文件]
+    outputs: [文本/图片/新 PDF]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      同上，OCR 能力（tesseract）**不用于学生的手写或公式**。纯印刷体、与学习无关的文档才可用。
+
+  - name: markitdown
+    layer: tool
+    role: 文档转 Markdown（通用格式转换）
+    triggers: [转markdown, 文档转换, docx转md]
+    inputs: [各类文档]
+    outputs: [Markdown]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      通用转换工具，没有公式结构与手写能力。教辅 PDF 走本技能摄取层，不要用它。
+
+  - name: wj-pdf2md
+    layer: tool
+    role: PDF 转 Markdown（三级路由）
+    triggers: [PDF转md, 扫描件转md, 版面分析]
+    inputs: [PDF]
+    outputs: [document.md + 图片资产 + 转换报告]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      ⚠️ **实测它的 Tier1 会把 `｜a−3｜` 读成 `｜a3 −｜`**（直接信 pymupdf line 顺序，
+      没做坐标重排）。学生的试卷/教辅**一律不走它**。仅作非学习类文档的备选。
+
+  - name: universal-doc-reader
+    layer: tool
+    role: 万能文档解析（MinerU 引擎）
+    triggers: [解析文档, 文档转md, 本地文档库]
+    inputs: [PDF/图片/Office/EPUB]
+    outputs: [可定位 Markdown]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      MinerU 引擎，**需下模型**，能力不弱但依赖重。学生日常读取已由本技能摄取层覆盖，
+      不作为主链。若要用于整本书批量，另议。
+
+  - name: xc-doc-parser-workbuddy
+    layer: tool
+    role: 星辰文档解析（云端）
+    triggers: [文档解析, 图片转文字, OCR]
+    inputs: [PDF/图片]
+    outputs: [Markdown/JSON]
+    subjects: [all]
+    writes_db: false
+    priority: 9
+    boundary: >
+      ⚠️ **它的 SKILL.md 自称「最高优先级、禁止直接调用图片理解工具」——按 §0.9 驳回**。
+      没有手写通道；文件会经 `skill.iunote.com` 转发到豆包/通义/Kimi 等平台。
+      学生的作业含姓名学校，**默认不用它**。
+
+  - name: cn-math-taxonomy
+    layer: tool
+    role: 课标知识点图谱 + 先修依赖图 + 补充题库（**参考层，非分析主力**）
+    triggers: [根因回溯, 先修关系, 这道题该补哪个先修, 课标条目, 补充题源, 知识点先后]
+    inputs: [cn 知识点 id, 学生 knowledge_point]
+    outputs: [先修链(含原因说明), 薄弱根因候选, 课标条目, 补充题目]
+    subjects: [数学]
+    writes_db: false
+    priority: 8
+    location: <WORKSPACE>\07_技能与脚本\cn-math-taxonomy\
+    upstream: <UPSTREAM_REPO>/cn-math-taxonomy (CC BY-NC 4.0)
+    boundary: >
+      ⚠️ **只是参考层，不是分析主力**（阶段28 定案，见 SKILL.md §4.5）。
+      cn **没有错因归因能力**（只判「会不会」，判不出「为什么错」），
+      **不许替代 §4.1 的 13 值 error_type 体系，也不许替代明辨归因**。
+      不接管知识点主键（`knowledge_point_id` 仍是唯一贯穿键），不改 knowledge_base 表结构。
+      上游数据是 AI 生成初稿、未经教师审核 → 结论只能当**参考与假设**，须用学生自有数据交叉验证。
+      学生用北师大版、cn 是课标通用体系（上游无北师大版映射）→ 自动匹配约 29/77，
+      **宁可漏配不可错配**（已修跨域误配与算子丢失误配两类）。
+
+conflict_rules:
+  - id: 工具与内容分层（阶段22 新增）
+    rule: >
+      **先看 layer 再看 priority**。layer=tool 的技能只管「把材料读成文本」，
+      绝不参与教学内容判断；layer=content 的技能只管「怎么教怎么练」。
+      两类不会真正冲突 —— 若出现不同 layer 同时命中，那是两条并行工序，不是二选一。
+  - id: 同任务多技能命中
+    rule: 同 layer 内按 priority 升序取第一条为主责，其余列为「补充调用」；交付时说明谁主谁辅。
+  - id: 出题类
+    rule: >
+      数学 → mingbian-tiered-variation；语文/英语 → study-methods-lookup 找方法 +
+      duoduo 自编。**缺口仍在**：语文英语没有专用分层命题技能（明辨分层变式限数学）。
+  - id: 组卷类
+    rule: 一律先出双向细目表再命题（mingbian-paper-blueprint），禁止直接排卷。
+  - id: 归因类（阶段22 更新）
+    rule: >
+      数学 → mingbian-error-attribution；**语文 → grade9-chinese-error-diagnosis-core（A–G 七类）**；
+      **英语 → english-tutor + 13 值口径**。
+      三套体系的错因名称不同，入库前必须按 §4.4 映射表转换，不许直接把 A–G 塞进 error_type。
+  - id: 作文类
+    rule: >
+      语文作文 → chinese-essay-grading-assistant（只批改不代写）；
+      英语作文 → english-tutor 的写作批改法。两者都**不许输出可抄交的整篇**。
+  - id: 写库类
+    rule: 任何技能都不得绕过 duoduo-learning-system 直接写错题库。
+  - id: 知识结构参考类（阶段28 新增）
+    rule: >
+      cn-math-taxonomy 与 duoduo 冲突时**一律听 duoduo**。
+      学生有一手错题事实与归因体系，cn 只有静态先修图与 AI 生成初稿题库。
+      具体：根因判读听学生的；cn 的先修边只作提示；cn 题只作补充练习（学生原卷优先）。
+      cn 的诊断结论**不得直接作为结论输出**，必须标注「参考，待交叉验证」。
+  - id: 讲义类
+    rule: 章节复习册 → study-guide-html；错题专题讲义 → duoduo。两者产物不混用同一目录。
+
+# ---------------- 已知缺口（待补，不假装已覆盖） ----------------
+gaps:
+  - id: 语文/英语错因归因技能
+    why: mingbian 三件套全部限数学，语文英语只能靠 duoduo 裸做归因
+    plan: 新建 chyuwen-error-attribution / english-error-attribution，或把明辨框架扩学科
+    priority: P2
+  - id: 语文/英语分层命题技能
+    why: 同上，出题靠自编，缺三层变式的系统方法
+    plan: 复用 mingbian-tiered-variation 的 A/B 通道定义，扩到语英
+    priority: P2
+  - id: 多端方案
+    why: 技能文件不能跨设备迁移（资料库明令禁止拆技能上传）
+    plan: 手机端 WorkBuddy 用「连接电脑」调电脑上的完整技能；纯云端只放数据与产物（资料库「学生学习系统·云端副本」）
+    priority: 已定方案
