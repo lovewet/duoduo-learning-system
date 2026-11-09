@@ -155,17 +155,17 @@ python scripts/fix_db.py --apply # 落库（自动备份）
 
 | 库 | 表 | 行数 | 说明 |
 |:--|:--|--:|:--|
-| 错题库 | `errors` | 1227 | 主表，35 列 |
-| 知识点库 | `knowledge_base` | 186 | 知识点唯一 ID 体系 |
-| 知识点明细 | `knowledge_detail` | 4501 | 按单元存正文（英语词表为主） |
-| 掌握度画像 | `mastery` | 64 | 间隔重复 + 消解状态 |
-| 题库 | `questions` / `question_items` | 4074 / 1036 | 题 + 解析 |
-| 练习答案 | `exercise_answers` | 483 | |
-| OCR 判题 | `error_ocr_judged` | 2168 | 拍题判错因 |
-| 主题映射 | `error_topic_map` | 1137 | 错题→章节 |
-| 分类映射 | `error_category_mapping` | 236 | 学科分门归类 |
-| 任务卡 | `task_cards` | 237 | 排程落库 |
-| 课表 | `school_timetable` | 35 | 排程输入 |
+| 错题库 | `errors` | 约 1.2k | 主表，35 列 |
+| 知识点库 | `knowledge_base` | 约 190 | 知识点唯一 ID 体系 |
+| 知识点明细 | `knowledge_detail` | 约 4.5k | 按单元存正文（英语词表为主） |
+| 掌握度画像 | `mastery` | 约 60 | 间隔重复 + 消解状态 |
+| 题库 | `questions` / `question_items` | 约 4k / 约 1k | 题 + 解析 |
+| 练习答案 | `exercise_answers` | 约 480 | |
+| OCR 判题 | `error_ocr_judged` | 约 2.2k | 拍题判错因 |
+| 主题映射 | `error_topic_map` | 约 1.1k | 错题→章节 |
+| 分类映射 | `error_category_mapping` | 约 240 | 学科分门归类 |
+| 任务卡 | `task_cards` | 约 240 | 排程落库 |
+| 课表 | `school_timetable` | 约 35 | 排程输入 |
 
 > 完整字段见 `data/_schema.md`。各表 CSV 在 `data/`。
 

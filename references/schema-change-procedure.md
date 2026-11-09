@@ -50,7 +50,7 @@ for t in ('errors','questions','question_items','exercise_answers'):
 | 表 | 存的是 | 能当「学生原作答」？ |
 |:--|:--|:--|
 | `errors` | 错因摘要 + （少量）原题/原作答 | ✅ 唯一来源 |
-| `questions`(739) / `exercise_answers`(483) / `question_items`(1036) | 出题题库、历史练习卷答案、小题答案+解析 | ❌ **老师标准答案**，当学生的用＝直接泄题 |
+| `questions`(约 700) / `exercise_answers`(约 480) / `question_items`(约 1k) | 出题题库、历史练习卷答案、小题答案+解析 | ❌ **老师标准答案**，当学生的用＝直接泄题 |
 
 ## 从自由文本列回填结构列（阶段9 实测可行）
 

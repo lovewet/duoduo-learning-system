@@ -37,7 +37,7 @@
 | `errors` | 每道新错题（含 error_pattern / student_steps） |
 | `knowledge_base` | 缺的知识点先补，再回填 `knowledge_point_id` |
 | `questions` | 讲义里的练习题（含答案与解析） |
-| `task_cards` | 7 天 × 3 科的任务卡 |
+| `task_cards` | 约 240 天 × 3 科的任务卡 |
 | `mastery` | 有错题的知识点重建画像（mastery_level=0, interval=1） |
 
 ### 10.2 注意事项
